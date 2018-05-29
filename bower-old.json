@@ -1,0 +1,20 @@
+{
+  "name": "371_IMDB",
+  "description": "Semester Project in CIS371 - recreating IMDB",
+  "main": "index.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0"
+  },
+  "resolutions": {
+    "polymer": "^2.0.0",
+    "paper-button": "^2.0.0",
+    "polymerfire": "^2.2.1",
+    "firebase": "^4.1.1",
+    "app-storage": "1 - 2",
+    "webcomponentsjs": "^1.0.0"
+  }
+}

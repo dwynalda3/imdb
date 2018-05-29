@@ -1,0 +1,341 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-app-script.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs-icons.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/shadycss/apply-shim.html">
+<script src="../../node_modules/jquery/dist/jquery.js"></script>
+
+<dom-module id="movie-db">
+    <link rel="import" type="css" href="login-fb.css">
+
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+
+
+        <firebase-app id="myFireApp"
+			auth-domain="homework5-48fe3.firebaseapp.com"
+			database-url="https://homework5-48fe3.firebaseio.com"
+			api-key="AIzaSyDyOzJoTTpddTQWzr4j-FVXvqLxQJzwXjQ"
+			storage-bucket="homework5-48fe3.appspot.com"
+			messaging-sender-id="401542426153">
+		</firebase-app>
+
+        <firebase-auth id="fbauth" provider="google" signed-in="{{signedIn}}" user="{{user}}"></firebase-auth>
+        <firebase-query id="query4" path="/imdb" data="{{qryData}}"></firebase-query>
+		<firebase-query id="query2" path="/[[user.uid]]" data="{{favorites}}"></firebase-query>
+
+        <div id="loginItems">
+            <paper-button raised on-click="login" hidden$="[[signedIn]]">Login with Google</paper-button>
+            <paper-button raised on-click="logout" hidden$="[[!signedIn]]">Logout</paper-button>
+            <div id="welcomeText" hidden$="[[!signedIn]]">Welcome, [[user.displayName]]!</div>
+        </div>
+
+		<div class="header">
+            <div class="header layout horizontal center-justified">
+                <h1>Movie Review Application</h1>
+            </div>
+            <div class="content layout horizontal center-justified">
+                <paper-tabs selected="{{sel}}">
+                    <paper-tab>Home</paper-tab>
+                    <paper-tab>Read Reviews</paper-tab>
+                    <paper-tab>Search Movies/Leave a Review</paper-tab>
+                </paper-tabs>
+            </div>
+        </div>
+
+        <iron-pages selected="[[sel]]">
+            <div id="HOME" class="tab-body">
+                <div id="starredMovies">
+                    <h3 class="tab-title">My Starred Movies</h3>
+                    <div hidden$="[[signedIn]]">Sign In to view your Starred Movies</div>
+                        <iron-list id="starredMoviesList" items="{{favorites}}" as="favorite">
+                            <template>
+                                <paper-icon-item>
+                                    <img class="movie-thumbnail" slot="item-icon" src="[[favorite.poster]]" alt="Poster for [[favorite.title]]" />
+                                    <paper-item-body two-line class="movie-data">
+                                        <div>[[favorite.title]]&nbsp;<iron-icon on-click="deleteFavorite" icon="icons:delete"></iron-icon>
+                                        <div secondary>[[favorite.year]]</div>
+                                    </paper-item-body>
+                                </paper-icon-item>
+                            </template>
+                        </iron-list>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="REVIEW" class="tab-body">
+                <div>
+                    <h3 class="tab-title">Movie Reviews Feed</h3>
+                    <div class="layout horizontal">
+                        <paper-button raised class="indigo" on-click="searchForReview" disabled="[[!signedIn]]">Search</paper-button>
+                        <paper-input id="reviewSearch" class="flex" label="Search for reviews by movie title" value="{{reviewSearchTerm}}"></paper-input>
+                    </div>
+                </div>
+                <div class="align self-center" hidden$="[[signedIn]]">Sign In to View and Leave Reviews</div>
+                <div id="movieReviews">
+                    <h4>All Movie Reviews</h4>
+                    <iron-list id="movieReviewsList" items="{{qryData}}" as="review">
+                        <template>
+                            <div class="card">
+                            <paper-card class="movie-review" heading="[[review.title]] ([[review.year]])">
+                                <div class="card-content">[[review.review]]</div>
+                                <div class="layout horizontal end-justified style-scope lay-out">
+                                    <div class="style-scope lay-out"></div>
+                                </div>
+                            </paper-card>
+                            </div>
+						</template>
+                    </iron-list>
+                </div>
+
+                <div id="movieReviewsSearch">
+                    <h4>Movie Reviews For Titles Containing "[[reviewSearchTerm]]"</h4>
+                    <iron-list id="movieReviewsListSearch" items="{{searchData}}" as="review">
+                        <template>
+                            <div class="card">
+                                <paper-card class="movie-review" heading="[[review.title]] ([[review.year]])">
+                                    <div class="card-content">[[review.review]]</div>
+                                    <div class="layout horizontal end-justified style-scope lay-out">
+                                        <div class="style-scope lay-out"></div>
+                                    </div>
+                                </paper-card>
+                            </div>
+                        </template>
+                    </iron-list>
+                </div>
+
+            </div>
+
+            <div id="MOVIES" class="tab-body">
+                <h3>Search For Movies</h3>
+                <span hidden$="[[signedIn]]">Sign In to search for movies</span>
+                <div id="movieSearchSection">
+                    <div class="layout horizontal">
+                        <paper-button raised class="indigo" on-click="searchForMovie" disabled="[[!signedIn]]">Search</paper-button>
+                        &nbsp;
+                        <paper-input id="movieSearch" class="flex" label="Search for a movie title" value="{{movieSearchTerm}}"></paper-input>
+                    </div>
+                    <iron-list id="searchResults" items="[[searchResults.Search]]" as="result">
+                    <template>
+                        <paper-icon-item>
+                            <img class="movie-thumbnail" slot="item-icon" src="[[result.Poster]]" alt="Poster for [[result.Title]]" />
+                            <paper-item-body three-line class="movie-data">
+                                <div>[[result.Title]] <iron-icon on-click="likeMe" icon="icons:star"></iron-icon>
+                                </div>
+                                <div secondary>[[result.Year]]</div>
+                                <div><paper-button raised class="indigo" id="addBtn" on-click="addReview" disabled="[[!signedIn]]" title="[[result.Title]],[[result.Year]]">Leave a Review</paper-button></div>
+                            </paper-item-body>
+                        </paper-icon-item>
+                    </template>
+                    </iron-list>
+                </div>
+
+                <paper-dialog id="newReview" on-iron-overlay-closed="diaClosed">
+                    <paper-dialog-scrollable>
+                        <paper-textarea id="review" label="Review" max-rows="4" required></paper-textarea>
+                        <div class="buttons">
+                            <paper-button dialog-dismiss>Cancel</paper-button>
+                            <paper-button dialog-confirm>Add</paper-button>
+                        </div>
+                    </paper-dialog-scrollable>
+                </paper-dialog>
+            </div>
+        </iron-pages>
+    </template>
+
+    <script>
+        /**
+         * @customElement
+         * @polymer
+         */
+        class MovieDB extends Polymer.Element {
+            static get is() {return 'movie-db'; }
+            static get properties() {
+                return {
+                    prop1: {
+                        type: String,
+                        value: 'login-fb'
+                    },
+                    apiKey: {
+                        type: String,
+                        value: 'apikey=de39c12d'
+                    },
+                    baseURL: {
+                        type: String,
+                        value: 'http://www.omdbapi.com/?'
+                    },
+                    movieSearchTerm: {
+                        type: String
+                    },
+                    searchResults: {
+                        type: Object
+                    },
+                    sel: {
+                        type: Number,
+                        value: 0
+                    },
+                    user: {
+                        type: Object
+                    },
+                    signedIn: {
+                        type: Boolean
+                    },
+                    reviewSearchTerm: {
+                        type: String,
+                        value: ""
+                    },
+                    searchData: {
+
+                    },
+                    movieReviewSearched: {
+                        type: Boolean,
+                        value: false
+                    },
+                    title: {
+
+                    },
+                    year: {
+
+                    }
+
+                };
+            }
+            
+            ready(){
+                super.ready();
+                var movRevS = Polymer.dom(this.root).querySelector('#movieReviewsSearch');
+                $(movRevS).hide();
+            }
+            
+            searchForMovie() {
+                if (this.$.movieSearch.value) {
+                    console.log(`searching for movie "${this.$.movieSearch.value}"`);
+                    $.ajax({
+                        url: `${this.baseURL}&${this.apiKey}&s=${this.$.movieSearch.value}`,
+                        type: "GET"
+                    })
+                    .done( (response) => {
+                        console.log(response);
+                        this.searchResults = response;
+                    })
+                    .fail( (xhr, status, errorThrown) => {
+                        alert(`Error: ${errorThrown}`);
+                        console.log(`Error: ${errorThrown}`);
+                        console.log(`Status: ${status}`);
+                    });
+                }
+            }
+
+            addReview(e) {
+                this.$.newReview.open();
+                var args = e.target.getAttribute('title').split(',');
+                this.title = args[0];
+                this.year = args[1];
+                console.log(args[0]);
+                console.log(args[1]);
+            }
+
+            diaClosed() {
+                if (this.$.newReview.closingReason.confirmed && this.$.review.value!=null) {
+                    alert ("You entered a review for " + this.title);
+                    const dbRef = this.$.myFireApp.app.database();
+                    dbRef.ref('/imdb').push().set({ title : this.title,
+                        review: this.$.review.value, year: this.year });
+                }
+                else if (this.$.newReview.closingReason.confirmed ){
+                    this.$.newReview.open();
+                    this.$.review.validate();
+                }
+            }
+
+			likeMe(ev){
+				const dbRef = this.$.myFireApp.app.database();
+				const user = firebase.auth().currentUser.uid;
+				const key = ev.model.result.imdbID;
+				dbRef.ref('/'+user+'/'+key).update({title : ev.model.result.Title });
+                dbRef.ref('/'+user+'/'+key).update({poster : ev.model.result.Poster });
+                dbRef.ref('/'+user+'/'+key).update({year : ev.model.result.Year });
+			}
+
+			deleteMe(ev) {
+				const dbRef = this.$.myFireApp.app.database();
+				const key = ev.model.result.$key;
+				dbRef.ref('/imdb/'+key).set(null);
+				alert("Deleted: " + ev.model.review.title);
+            }
+
+			deleteFavorite(ev) {
+				const dbRef = this.$.myFireApp.app.database();
+				const key = ev.model.favorite.$key;
+				const user = firebase.auth().currentUser.uid;
+				dbRef.ref('/'+user+'/'+key).set(null);
+				console.log("Deleted: " + ev.model.favorite.title);
+            }
+
+            login() {
+                this.$.fbauth.signInWithPopup().then( result => {
+					location.reload();
+                });
+            }
+
+            logout() {
+                this.$.fbauth.signOut();
+                location.reload();
+            }
+
+            searchForReview(){
+                var movRev = Polymer.dom(this.root).querySelector('#movieReviews');
+                var movRevS = Polymer.dom(this.root).querySelector('#movieReviewsSearch');
+                if(this.reviewSearchTerm == "")
+                {
+                    $(movRev).show();
+                    $(movRevS).hide();
+                }
+                else
+                {
+                    $(movRev).hide();
+                    $(movRevS).show();
+                }
+                console.log(this.reviewSearchTerm);
+                this.movieReviewSearched = true;
+                this.searchData = this.$.query4.data.slice();
+                console.log(this.searchData);
+                for(var i in this.searchData)
+                {
+                    if(this.searchData[i].title.toLowerCase().includes(this.reviewSearchTerm.toLowerCase()) == false)
+                    {
+                        delete this.searchData[i];
+                    }
+                }
+                console.log(this.searchData);
+                for(var j in this.searchData)
+                {
+                    console.log(this.searchData[j].title);
+                }
+            }
+
+        }
+        window.customElements.define(MovieDB.is, MovieDB);
+    </script>
+</dom-module>

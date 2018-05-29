@@ -1,0 +1,26 @@
+{
+  "name": "cis371-imdb",
+  "version": "1.0.0",
+  "description": "Semester Project in CIS371 - recreating IMDB",
+  "main": "index.html",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "jquery": "^3.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/McGaelen/cis371-imdb.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/McGaelen/cis371-imdb/issues"
+  },
+  "homepage": "https://github.com/McGaelen/cis371-imdb#readme"
+}
